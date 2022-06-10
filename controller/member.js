@@ -7,12 +7,15 @@ exports.handleAddClientMember = async(req, res, next) => {
     return
   }
   // 先用uuid找看看有沒有共同uuid，有的話表示會員已建立過
-  const checkMember_syntax = `SELECT * FROM client_user WHERE uuid = '${uuid}'`;
-  const createMember_syntax = `INSERT INTO client_user (web_resource, uuid, name, identity) VALUES (${web_resource}, '${uuid}', '${name}', ${identity});`
-  let isMemberExist = await db.execute(checkMember_syntax)
-  isMemberExist = isMemberExist[0].length
+  const checkMemberSyntax = `SELECT id FROM client_user WHERE uuid = '${uuid}'`;
+  const createMemberSyntax = `INSERT INTO client_user (web_resource, uuid, name, identity) VALUES (${web_resource}, '${uuid}', '${name}', ${identity});`
+  const getMember = await db.execute(checkMemberSyntax).then(res => res[0])
+  const isMemberExist = getMember.length
+  let memberId
   if(!isMemberExist){
-    await db.execute(createMember_syntax)
+    memberId = await db.execute(createMemberSyntax).then(res => res[0].insertId)
+  }else{
+    memberId = getMember[0].id
   }
-  res.status(201).send()
+  res.status(201).json({memberId})
 }
