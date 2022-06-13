@@ -1,9 +1,7 @@
-const express = require('express')
+import express from 'express'
+import {handleGetAllMessage} from '../controller/client'
 const router = express.Router()
-const clientController = require('../controller/client')
-
 router.route('/message/:client_uuid')
-  .get(clientController.handleGetAllMessage)
+  .get(handleGetAllMessage)
 
-
-module.exports = router
+export default router

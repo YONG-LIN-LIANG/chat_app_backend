@@ -1,4 +1,4 @@
-const db = require('../config/db');
+const db = require('../config/db/mysql');
 const checkType = require('../function/index').handleCheckType;
 exports.handleGetTagList = async(req, res, next) => {
   const {resource_id} = req.query

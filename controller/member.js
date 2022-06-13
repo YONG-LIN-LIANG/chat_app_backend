@@ -1,8 +1,9 @@
-const db = require('../config/db');
-const checkType = require('../function/index').handleCheckType;
+import db from '../config/db/mysql'
+import {handleCheckType} from '../function/index'
+// const checkType = require('../function/index').handleCheckType;
 exports.handleAddClientMember = async(req, res, next) => {
   const { uuid, name, identity, web_resource } = req.body;
-  if(!(checkType(uuid, 'string') && checkType(name, 'string') && checkType(identity, 'number') && checkType(web_resource, 'number'))){
+  if(!(handleCheckType(uuid, 'string') && handleCheckType(name, 'string') && handleCheckType(identity, 'number') && handleCheckType(web_resource, 'number'))){
     res.status(400).send()
     return
   }

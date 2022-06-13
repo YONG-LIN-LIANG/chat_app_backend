@@ -1,10 +1,7 @@
-const express = require('express')
+import express from 'express'
+import {handleAddClientMember} from '../controller/member'
 const router = express.Router()
-const memberController = require('../controller/member')
-
 router.route('/client/add')
-  .post(memberController.handleAddClientMember)
+  .post(handleAddClientMember)
 
-
-
-module.exports = router
+export default router
