@@ -5,6 +5,8 @@ import swaggerUI from 'swagger-ui-express';
 import swaggerJsDoc from './swagger.json';
 import express from 'express';
 const app = express()
+
+// redis 範例用法
 import {redis} from './config/db/redis'
 const setValue = async() => {
   const db = await redis()
