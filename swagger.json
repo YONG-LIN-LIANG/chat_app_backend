@@ -19,6 +19,10 @@
     {
       "name": "tag",
       "description": "Tag Controller Api"
+    },
+    {
+      "name": "token",
+      "description": "Token Controller Api"
     }
   ],
   "paths": {
@@ -87,6 +91,37 @@
           }
         }
       }
+    },
+    "/token/login": {
+      "post": {
+        "tags": [
+          "token"
+        ],
+        "summary": "Employee login",
+        "consumes": [
+          "application/json"
+        ],
+        "requestBody": {
+          "description": "Employee login",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/definitions/token-login"
+              },
+              "examples": {
+                "account": {
+                  "summary": "範例一",
+                  "value": {
+                    "account": "tkb0004412",
+                    "password": "12345667"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -104,6 +139,17 @@
         },
         "web_resource": {
           "type": "number"
+        }
+      }
+    },
+    "token-login": {
+      "type": "object",
+      "properties": {
+        "account": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
         }
       }
     }
