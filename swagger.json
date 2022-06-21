@@ -17,6 +17,10 @@
       "description": "Member Controller Api"
     },
     {
+      "name": "client",
+      "description": "Client Controller Api"
+    },
+    {
       "name": "tag",
       "description": "Tag Controller Api"
     },
@@ -55,6 +59,39 @@
           },
           "400": {
             "description": "格式錯誤"
+          }
+        }
+      }
+    },
+    "/client/message/{client_id}": {
+      "get": {
+        "tags": [
+          "client"
+        ],
+        "summary": "Get client room all messages.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "client_id",
+            "schema": {
+              "type": "integer"
+            },
+            "required": true,
+            "description": "client_id為客戶端id(必填)"
+          }
+        ],
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "取得成功"
+          },
+          "204": {
+            "description": "無任何訊息"
           }
         }
       }
