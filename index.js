@@ -26,7 +26,7 @@ import csRoute from './route/cs'
 import memberRoute from './route/member'
 import messageRoute from './route/message'
 import roomRoute from './route/room'
-import tagRoute from './route/tag'
+import questionRoute from './route/question'
 import tokenRoute from './route/token'
 app.use(cors())
 app.use(express.json())
@@ -36,7 +36,7 @@ app.use('/cs', csRoute)
 app.use('/member', memberRoute)
 app.use('/message', messageRoute)
 app.use('/room', roomRoute)
-app.use('/tag', tagRoute)
+app.use('/question', questionRoute)
 // const specs = swaggerJsDoc(options)
 app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerJsDoc))
 // 中介攔截錯誤

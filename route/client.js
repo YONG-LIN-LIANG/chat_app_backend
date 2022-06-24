@@ -1,7 +1,7 @@
 import express from 'express'
 import {handleGetAllMessage} from '../controller/client'
 const router = express.Router()
-router.route('/message/:client_id')
+router.route('/message')
   .get(handleGetAllMessage)
 
 export default router

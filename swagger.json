@@ -21,8 +21,8 @@
       "description": "Client Controller Api"
     },
     {
-      "name": "tag",
-      "description": "Tag Controller Api"
+      "name": "question",
+      "description": "Question Controller Api"
     },
     {
       "name": "token",
@@ -63,21 +63,21 @@
         }
       }
     },
-    "/client/message/{client_id}": {
+    "/member/resource/{resource_id}": {
       "get": {
         "tags": [
-          "client"
+          "member"
         ],
-        "summary": "Get client room all messages.",
+        "summary": "Get group and website of member.",
         "parameters": [
           {
             "in": "path",
-            "name": "client_id",
+            "name": "resource_id",
             "schema": {
               "type": "integer"
             },
             "required": true,
-            "description": "client_id為客戶端id(必填)"
+            "description": "resource_id為客戶端id(必填)"
           }
         ],
         "consumes": [
@@ -96,13 +96,64 @@
         }
       }
     },
-    "/tag": {
+    "/client/message": {
       "get": {
         "tags": [
-          "tag"
+          "client"
         ],
-        "summary": "Get all tags of the web resource.",
+        "summary": "Get client room all messages.",
         "parameters": [
+          {
+            "in": "query",
+            "name": "client_id",
+            "schema": {
+              "type": "integer"
+            },
+            "required": true,
+            "description": "client_id為客戶端id(必填)"
+          },
+          {
+            "in": "query",
+            "name": "resource_id",
+            "schema": {
+              "type": "integer"
+            },
+            "required": true,
+            "description": "resource_id為客戶端id(必填)"
+          }
+        ],
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "取得成功"
+          },
+          "204": {
+            "description": "無任何訊息"
+          }
+        }
+      }
+    },
+    "/question": {
+      "get": {
+        "tags": [
+          "question"
+        ],
+        "summary": "Get question info",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "question_id",
+            "schema": {
+              "type": "integer"
+            },
+            "required": true,
+            "description": "question_id為問題id(必填)"
+          },
           {
             "in": "query",
             "name": "resource_id",
@@ -172,9 +223,6 @@
           "type": "string"
         },
         "identity": {
-          "type": "number"
-        },
-        "web_resource": {
           "type": "number"
         }
       }
