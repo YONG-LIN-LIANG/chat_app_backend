@@ -103,6 +103,7 @@ exports.handleGetAllMessage = async (req, res, next) => {
           created_time: dataSplit[4],
           timeStampDate: handleFormatTimestamp(dataSplit[4])
         }
+        console.log('messageObj', messageObj)
         chatList.push(messageObj)
       }
       // room裡的系統訊息
