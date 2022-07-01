@@ -25,6 +25,10 @@
       "description": "Question Controller Api"
     },
     {
+      "name": "customer service",
+      "description": "Customer service Controller Api"
+    },
+    {
       "name": "token",
       "description": "Token Controller Api"
     }
@@ -176,6 +180,39 @@
           },
           "204": {
             "description": "此來源網站無標籤"
+          }
+        }
+      }
+    },
+    "/cs/room/{cs_id}": {
+      "get": {
+        "tags": [
+          "customer service"
+        ],
+        "summary": "Get user room list",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "cs_id",
+            "schema": {
+              "type": "integer"
+            },
+            "required": true,
+            "description": "cs_id為客服會員id(必填)"
+          }
+        ],
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "取得清單成功"
+          },
+          "204": {
+            "description": "無任何項目"
           }
         }
       }
