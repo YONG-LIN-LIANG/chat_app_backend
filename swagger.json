@@ -17,8 +17,16 @@
       "description": "Member Controller Api"
     },
     {
-      "name": "tag",
-      "description": "Tag Controller Api"
+      "name": "client",
+      "description": "Client Controller Api"
+    },
+    {
+      "name": "question",
+      "description": "Question Controller Api"
+    },
+    {
+      "name": "token",
+      "description": "Token Controller Api"
     }
   ],
   "paths": {
@@ -55,13 +63,97 @@
         }
       }
     },
-    "/tag": {
+    "/member/resource/{resource_id}": {
       "get": {
         "tags": [
-          "tag"
+          "member"
         ],
-        "summary": "Get all tags of the web resource.",
+        "summary": "Get group and website of member.",
         "parameters": [
+          {
+            "in": "path",
+            "name": "resource_id",
+            "schema": {
+              "type": "integer"
+            },
+            "required": true,
+            "description": "resource_id為客戶端id(必填)"
+          }
+        ],
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "取得成功"
+          },
+          "204": {
+            "description": "無任何訊息"
+          }
+        }
+      }
+    },
+    "/client/message": {
+      "get": {
+        "tags": [
+          "client"
+        ],
+        "summary": "Get client room all messages.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "client_id",
+            "schema": {
+              "type": "integer"
+            },
+            "required": true,
+            "description": "client_id為客戶端id(必填)"
+          },
+          {
+            "in": "query",
+            "name": "resource_id",
+            "schema": {
+              "type": "integer"
+            },
+            "required": true,
+            "description": "resource_id為客戶端id(必填)"
+          }
+        ],
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "取得成功"
+          },
+          "204": {
+            "description": "無任何訊息"
+          }
+        }
+      }
+    },
+    "/question": {
+      "get": {
+        "tags": [
+          "question"
+        ],
+        "summary": "Get question info",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "question_id",
+            "schema": {
+              "type": "integer"
+            },
+            "required": true,
+            "description": "question_id為問題id(必填)"
+          },
           {
             "in": "query",
             "name": "resource_id",
@@ -87,6 +179,37 @@
           }
         }
       }
+    },
+    "/token/login": {
+      "post": {
+        "tags": [
+          "token"
+        ],
+        "summary": "Employee login",
+        "consumes": [
+          "application/json"
+        ],
+        "requestBody": {
+          "description": "Employee login",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/definitions/token-login"
+              },
+              "examples": {
+                "account": {
+                  "summary": "範例一",
+                  "value": {
+                    "account": "tkb0004412",
+                    "password": "12345667"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -101,9 +224,17 @@
         },
         "identity": {
           "type": "number"
+        }
+      }
+    },
+    "token-login": {
+      "type": "object",
+      "properties": {
+        "account": {
+          "type": "string"
         },
-        "web_resource": {
-          "type": "number"
+        "password": {
+          "type": "string"
         }
       }
     }

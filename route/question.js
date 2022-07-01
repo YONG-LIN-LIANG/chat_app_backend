@@ -1,8 +1,8 @@
 const express = require('express')
 const router = express.Router()
-const tagController = require('../controller/tag')
+const questionController = require('../controller/question')
 
 router.route('/')
-  .get(tagController.handleGetTagList)
+  .get(questionController.handleGetQuestion)
 
 module.exports = router
