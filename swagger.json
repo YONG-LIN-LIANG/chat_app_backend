@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "http://172.18.48.177:3002/",
+      "url": "http://172.20.10.5:3002/",
       "description": "Steven node server"
     }
   ],
@@ -29,11 +29,48 @@
       "description": "Customer service Controller Api"
     },
     {
+      "name": "room",
+      "description": "Room Controller Api"
+    },
+    {
       "name": "token",
       "description": "Token Controller Api"
     }
   ],
   "paths": {
+    "/room/pair": {
+      "post": {
+        "tags": [
+          "room"
+        ],
+        "summary": "Create a pair",
+        "consumes": [
+          "application/json"
+        ],
+        "requestBody": {
+          "description": "Create a pair",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/definitions/pair"
+              }
+            }
+          }
+        },
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "201": {
+            "description": "房間建立成功"
+          },
+          "400": {
+            "description": "此會員已在房間內"
+          }
+        }
+      }
+    },
     "/member/client/add": {
       "post": {
         "tags": [
@@ -138,6 +175,48 @@
           },
           "204": {
             "description": "無任何訊息"
+          }
+        }
+      }
+    },
+    "/client/cs/recent": {
+      "get": {
+        "tags": [
+          "client"
+        ],
+        "summary": "Get client recent customer service",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "member_id",
+            "schema": {
+              "type": "integer"
+            },
+            "required": true,
+            "description": "member_id為客戶端id(必填)"
+          },
+          {
+            "in": "query",
+            "name": "resource_id",
+            "schema": {
+              "type": "integer"
+            },
+            "required": true,
+            "description": "resource_id為來源id(必填)"
+          }
+        ],
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "取得成功"
+          },
+          "204": {
+            "description": "無匹配資料"
           }
         }
       }

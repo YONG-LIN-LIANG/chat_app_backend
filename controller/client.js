@@ -4,9 +4,14 @@ import { handleFormatTimestamp, handleFormatDateTime } from '../function/index'
 
 const handleFormatSystemMessage = (smessage) => {
   const dataSplit = smessage.split(';')
-  const questionId = dataSplit[1]
-  let question_content= []
-  question_content = questionId === 1 || questionId === 2 ? dataSplit[3].split(',') : dataSplit[3]
+  // 從redis取出的資料都是字串，用+變為數字型態
+  const questionId = +dataSplit[1]
+  let question_content
+  if(questionId === 1) {
+    question_content = dataSplit[3].split(',')
+  } else if (questionId === 2) {
+    question_content = JSON.parse(dataSplit[3])
+  }
   const messageObj = {
     status: 0,
     question_id: +dataSplit[1],
@@ -51,7 +56,7 @@ exports.handleGetAllMessage = async (req, res, next) => {
   const getResourceInfo = await db.execute(getResourceInfoSyntax).then(res => res[0])
   const {website_name, group_name} = getResourceInfo[0]
   // 取得該會員所有房間
-  const RoomSyntax = `SELECT a.uuid as cs_uuid, r.id as room_id, b.name as group_name, w.website_name, a.name as cs_name, r.begin_time ,r.end_time FROM room r left join administrator_user a on r.administrator = a.id left join client_user c on r.client = c.id left join web_resource w on r.resource_id = w.id left join business_group b on w.group_id = b.id where r.client=${client_id} order by r.begin_time;`
+  const RoomSyntax = `SELECT a.id as cs_member_id, r.id as room_id, b.name as group_name, w.website_name, a.name as cs_name, r.begin_time ,r.end_time FROM room r left join administrator_user a on r.administrator = a.id left join client_user c on r.client = c.id left join web_resource w on r.resource_id = w.id left join business_group b on w.group_id = b.id where r.client=${client_id} order by r.begin_time;`
   // 檢查rooms的client有沒有自己
   const roomList = await db.execute(RoomSyntax).then(res => res[0])
   console.log('roomList', roomList)
@@ -63,6 +68,7 @@ exports.handleGetAllMessage = async (req, res, next) => {
   
   // 取得目前已讀狀況
   const readState = await redisDB.get(`message-${client_id}-read`)
+
   const clientreadId = readState !== null ? readState.split(';')[1].split('-')[1] :0
   console.log('readState', readState)
   if((roomList.length || (offlineRoom !== null && offlineRoom.chatList.length))){
@@ -73,7 +79,7 @@ exports.handleGetAllMessage = async (req, res, next) => {
         group: item.group_name,
         website: item.website_name,
         cs_name: item.cs_name,
-        cs_uuid: item.cs_uuid,
+        cs_member_id: item.cs_member_id,
         is_read_id: +clientreadId,
         begin_time: item.begin_time === null ? '' : handleFormatDateTime(item.begin_time.toISOString()),
         end_time: item.end_time === null ? '' : handleFormatDateTime(item.end_time.toISOString())
@@ -81,25 +87,28 @@ exports.handleGetAllMessage = async (req, res, next) => {
       // 取出該房間的聊天訊息
       let messageList = await redisDB.lRange(`message-${item.room_id}`, 0, -1)
       let smessageList = await redisDB.lRange(`smessage-${item.room_id}`, 0, -1)
-      
+      console.log('messageList', messageList)
       let chatList = []
       let sChatList = []
       // room裡的人員訊息
       for(let message of messageList) {
         const dataSplit = message.split(';')
-        const identity = dataSplit[1].split('-')[0]
+        const member = dataSplit[1].split('-')
         const messageObj = {
-          status: identity === 'cs' ? 1 : 2,
-          msg_id: +dataSplit[0],
+          status: member[0] === 'cs' ? 1 : 2,
+          message_id: +dataSplit[0],
+          member_id: member[1],
           name: dataSplit[2],
-          msg: dataSplit[3],
+          message: dataSplit[3],
           created_time: dataSplit[4],
           timeStampDate: handleFormatTimestamp(dataSplit[4])
         }
+        console.log('messageObj', messageObj)
         chatList.push(messageObj)
       }
       // room裡的系統訊息
       for(let smessage of smessageList) {
+        console.log('smessage', smessage)
         const messageObj = handleFormatSystemMessage(smessage)
         sChatList.push(messageObj)
       }
@@ -121,5 +130,17 @@ exports.handleGetAllMessage = async (req, res, next) => {
     res.status(204).send()
   }
   await redisDB.disconnect()
+  return
+}
+
+exports.handleGetRecentCs = async (req, res, next) => {
+  const {member_id, resource_id} = req.query
+  const getRecentCsSyntax = `SELECT a.id as administrator_id, a.name as administrator_name FROM room r left join administrator_user a on r.administrator = a.id where client = ${member_id} and r.resource_id = ${resource_id} and r.end_time is not null order by r.end_time desc limit 0,1`
+  const getRecentCs = await db.execute(getRecentCsSyntax).then(res => res[0])
+  if(getRecentCs.length){
+    res.status(200).send(getRecentCs[0])
+  }else {
+    res.status(204).send()
+  }
   return
 }
