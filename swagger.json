@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "http://172.18.48.177:3002/",
+      "url": "http://172.20.10.5:3002/",
       "description": "Steven node server"
     }
   ],

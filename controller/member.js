@@ -3,6 +3,7 @@ import {handleCheckType} from '../function/index'
 // const checkType = require('../function/index').handleCheckType;
 exports.handleAddClientMember = async(req, res, next) => {
   const { uuid, name, identity } = req.body;
+  console.log('req.body', req.body)
   if(!(handleCheckType(uuid, 'string') && handleCheckType(name, 'string') && handleCheckType(identity, 'number'))){
     res.status(400).send()
     return
