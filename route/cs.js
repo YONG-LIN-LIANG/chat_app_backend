@@ -1,8 +1,8 @@
 import express from 'express'
-import {handleGetAllUserRoom, handleGetLeaderBoard, handleGetPersonalRating} from '../controller/cs'
+import {handleGetAllUserRoom, handleGetLeaderBoard, handleGetPersonalRating, handleGetRoomMessage} from '../controller/cs'
 const router = express.Router()
 
-router.route('/room/:cs_id')
+router.route('/room/list/:cs_id')
   .get(handleGetAllUserRoom)
 
 router.route('/leader-board')

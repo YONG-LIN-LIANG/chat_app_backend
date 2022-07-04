@@ -8,4 +8,8 @@ router.route('/leave')
 router.route('/pair')
   .post(roomController.handlePair)
 
+router.route('/message')
+  .get(roomController.handleGetRoomMessage)
+
+
 module.exports = router
