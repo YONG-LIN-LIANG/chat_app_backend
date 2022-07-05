@@ -85,17 +85,56 @@ const handleFormatSystemMessage = (smessage) => {
   return messageObj
 }
 
+const handleGetOfflineSmessage = async(redisDB, client_id, group_name, website_name) => {
+  console.log('testtt', redisDB, client_id, group_name, website_name)
+  const offlineSmessageList = await redisDB.lRange(`smessage-${client_id}-0`, 0, -1)
+  console.log('offlineSmessageList', offlineSmessageList)
+  if(offlineSmessageList.length){
+    let offlineChatList = []
+    for(let smessage of offlineSmessageList) {
+      const offlineMessage = handleFormatSystemMessage(smessage)
+      offlineChatList.push(offlineMessage)
+    }
+    return {
+      room_id: 0,
+      group: group_name,
+      website: website_name,
+      cs_name: "",
+      cs_uuid: "",
+      is_read_id: 0,
+      begin_time: "",
+      end_time: "",
+      chatList: offlineChatList
+    }
+  }
+  return null
+}
+
 exports.handleGetRoomMessage = async(req, res, next) => {
   // 客戶端才需要resource_id，客服端只需要client_id
-  const { client_id } = req.query
+  const { client_id, resource_id } = req.query
   console.log('req.query', req.query)
+
+  
+
   // 取得該會員所有房間
   const RoomSyntax = `SELECT a.id as cs_member_id, r.id as room_id, b.name as group_name, w.website_name, a.name as cs_name, r.begin_time ,r.end_time FROM room r left join administrator_user a on r.administrator = a.id left join client_user c on r.client = c.id left join web_resource w on r.resource_id = w.id left join business_group b on w.group_id = b.id where r.client=${client_id} order by r.begin_time;`
   // 檢查rooms的client有沒有自己
   const roomList = await db.execute(RoomSyntax).then(res => res[0])
   console.log('roomList', roomList)
   const redisDB = await redis()
-  
+
+  // 取得網站來源的網站名稱及group名稱(未配對時使用，當roomList最後一筆的end_time不為空時才需要打來源資料)
+  // 表示目前未配對
+  let offlineRoom
+  if((roomList.length && roomList[roomList.length-1].end_time) || !roomList.length) {
+    const getResourceInfoSyntax = `SELECT w.website_name, b.name as group_name FROM web_resource w left join business_group b on w.group_id = b.id where w.id=${resource_id}`;
+    const getResourceInfo = await db.execute(getResourceInfoSyntax).then(res => res[0])
+    const {website_name, group_name} = getResourceInfo[0]
+    offlineRoom = await handleGetOfflineSmessage(redisDB, client_id, group_name, website_name)
+  }
+  console.log('offlineRoom', offlineRoom)
+
   let data = []
   if(roomList.length){
     // 取得目前已讀狀況(登入後才需要)
@@ -146,11 +185,18 @@ exports.handleGetRoomMessage = async(req, res, next) => {
       // data目前放的是完整的有開始及結束的聊天訊息
       data.push(roomObj)
     }
-      // 有可能目前使用者有未配對系統聊天訊息(最新)，等完整的push完再push未配對訊息
+       // 有可能目前使用者有未配對系統聊天訊息(最新)，等完整的push完再push未配對訊息
+    if(offlineRoom !== undefined && offlineRoom !== null && offlineRoom.chatList.length){
+      data.push(offlineRoom)
+    }
+    console.log('offlineMessageList', offlineRoom)
+    res.status(200).send(data)
+  } else if (!roomList.length && offlineRoom !== null && offlineRoom !== undefined) {
+    data.push(offlineRoom)
     res.status(200).send(data)
   }
   // 如果沒有roomList也沒有未配對系統訊息
-  if(!roomList.length){
+  else if(!roomList.length && (offlineRoom === null || offlineRoom === undefined)){
     res.status(204).send()
   }
   await redisDB.disconnect()

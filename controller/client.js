@@ -118,7 +118,6 @@ exports.handleGetAllMessage = async (req, res, next) => {
       data.push(roomObj)
     }
       // 有可能目前使用者有未配對系統聊天訊息(最新)，等完整的push完再push未配對訊息
-    console.log('offlineRoom', offlineRoom)
     if(offlineRoom !== null && offlineRoom.chatList.length){
       data.push(offlineRoom)
     }

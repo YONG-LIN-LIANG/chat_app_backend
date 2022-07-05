@@ -47,7 +47,7 @@ exports.handleReadMessage = async(req, res, next) => {
   const result = await redisDB.set(`message-${room_id}-read`, `${newReadState}`)
   console.log('result', result)
   if(result === 'OK') {
-    res.status(201).send({message_id: currentReadId})
+    res.status(201).send({message_id: +currentReadId})
   } else {
     res.status(400).send()
   }
