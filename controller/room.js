@@ -1,11 +1,13 @@
 import db from '../config/db/mysql'
 import {redis} from '../config/db/redis'
-import { handleFormatDateTime, handleFormatTimestamp } from '../function/index'
+import { handleFormatDateTime, handleFormatTimestamp, handleGetUnreadNum } from '../function/index'
+
 exports.handleLeaveRoom = async(req, res, next) => {
 
 }
 
 exports.handlePair = async(req, res, next) => {
+  const date = new Date(+new Date() + 8 * 3600 * 1000 + 2000)
   const redisDB = await redis()
   const { client_id, cs_id, resource_id } = req.body
   // 檢查此會員是不是已配對中
@@ -31,7 +33,8 @@ exports.handlePair = async(req, res, next) => {
     }
     pairCsId = csInfoRes[0].cs_id
   }
-  const currentTime = handleFormatDateTime(new Date().toISOString())
+  const currentTime = handleFormatDateTime(date.toISOString())
+  console.log('first message', currentTime)
   const createRoomSyntax = `INSERT INTO room (client, administrator, begin_time, resource_id) VALUES (${client_id}, ${pairCsId}, '${currentTime}', ${resource_id})`
   const roomId = await db.execute(createRoomSyntax).then(res => res[0].insertId)
   
@@ -39,10 +42,12 @@ exports.handlePair = async(req, res, next) => {
   await redisDB.rename(`smessage-${client_id}-0`, `smessage-${roomId}`)
   // 發布人員第一則訊息(客服人員xxx在線為您服務)
   let messageId = await redisDB.lLen(`message-${roomId}`)
-  messageId = messageId === 0 ? 1 : messageId++
+  console.log('messageId1', messageId)
+  messageId = messageId === 0 ? 1 : messageId + 1
+  console.log('messageId2', messageId)
   const firstMessage = `客服人員 ${csInfo.cs_name} 在線為您服務`
   const firstMessageTimeOut = setTimeout(async() => {
-    const firstMessageTime = handleFormatDateTime(new Date().toISOString())
+    const firstMessageTime = handleFormatDateTime(date.toISOString())
     await redisDB.rPush(`message-${roomId}`, `${messageId};cs-${csInfo.cs_id};${csInfo.cs_name};${firstMessage};${firstMessageTime}`)
     console.log('roomId', roomId)
     const firstMessageObj = {
@@ -54,7 +59,37 @@ exports.handlePair = async(req, res, next) => {
       createdTime: firstMessageTime
     }
     await redisDB.set(`message-${roomId}-read`, 'cs-0;client-0')
-    res.status(201).send({...csInfo, room_id: roomId, first_message: firstMessageObj})
+    // 取得客戶端加入聊天室時，要加入客服端清單的object資訊
+    const getNewRoomInfoSyntax = `SELECT c.name as name, w.website_name as website, b.name as group_name FROM room r left join client_user c on r.client = c.id left join web_resource w on w.id = r.resource_id left join business_group b on b.id = w.group_id where client = ${client_id} and end_time is null`
+    const getNewRoomInfoRes = await db.execute(getNewRoomInfoSyntax).then(res => res[0])
+    const {name, website, group_name} = getNewRoomInfoRes[0]
+    const lastMessage = await redisDB.lIndex(`message-${roomId}`, -1)
+    // 取得已讀狀況
+    const readStatus = await redisDB.get(`message-${roomId}-read`)
+    const dataSplit = lastMessage.split(';')
+    console.log('dataSplit', dataSplit)
+    const readMessageId = +readStatus.split(';')[0].split('-')[1]
+    const message = dataSplit[3]
+    messageId = +dataSplit[0]
+    const identity = dataSplit[1].split('-')[0]
+    const messageStatus = identity === 'cs' ? 1 : 2
+    const createdTime = dataSplit[4]
+    const unread = await handleGetUnreadNum(redisDB, roomId, readMessageId, 1)
+    const roomInfo = {
+      member_id: client_id,
+      name,
+      message_status: messageStatus,
+      message,
+      message_id: messageId,
+      created_time: createdTime,
+      unread,
+      room_id: roomId,
+      group: group_name,
+      website,
+    }
+    console.log('roomInfooo', roomInfo)
+    //
+    res.status(201).send({...csInfo, room_id: roomId, first_message: firstMessageObj, cs_new_user_room: roomInfo})
     await redisDB.disconnect()
     clearTimeout(firstMessageTimeOut)
     return

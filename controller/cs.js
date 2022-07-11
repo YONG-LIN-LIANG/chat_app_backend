@@ -34,15 +34,18 @@ exports.handleGetAllUserRoom = async(req, res, next) => {
       const dataSplit = lastMessage.split(';')
       const readMessageId = +readStatus.split(';')[0].split('-')[1]
       const message = dataSplit[3]
+      const messageId = +dataSplit[0]
       const identity = dataSplit[1].split('-')[0]
       const messageStatus = identity === 'cs' ? 1 : 2
       const createdTime = dataSplit[4]
       const unread = await handleGetUnreadNum(redisDB, item.room_id, readMessageId, 1)
+      console.log('unread', unread)
       room_list.push({
         member_id: item.member_id,
         name: item.name,
         message_status: messageStatus,
         message,
+        message_id: messageId,
         created_time: createdTime,
         unread,
         room_id: item.room_id,
@@ -64,5 +67,39 @@ exports.handleGetLeaderBoard = async(req, res, next) => {
 }
 
 exports.handleGetPersonalRating = async(req, res, next) => {
-  
+  const { cs_id } = req.params
+  const getRatingListSyntax = `SELECT rating FROM room where administrator = ${cs_id} and end_time is not null;`
+  const getRatingList = await db.execute(getRatingListSyntax).then(res => res[0])
+  console.log('getRatingList', getRatingList)
+  // getRatingList跑回圈區分每個星等的數量多少
+  let rating = {
+    '5': 0,
+    '4': 0,
+    '3': 0,
+    '2': 0,
+    '1': 0
+  }
+  for(let item of getRatingList) {
+    rating[item.rating] = rating[item.rating] + 1
+  }
+  console.log('rating', rating)
+  res.status(200).send(rating)
+}
+
+exports.handleGetResourceWebsiteList = async(req, res, next) => {
+  console.log('test')
+  const { group_id } = req.query
+  console.log('group_id', group_id)
+  let getListSyntax = ''
+  if(!group_id) {
+    getListSyntax = `SELECT id as group_id, name as group_name FROM business_group;`
+  } else getListSyntax = `SELECT w.id as resource_id, w.website_name FROM business_group b left join web_resource w on b.id = w.group_id where w.group_id = ${group_id};`
+
+  const getList = await db.execute(getListSyntax).then(res => res[0])
+  res.status(200).send(getList)
+}
+
+exports.handleGetCommentList = async(req, res, next) => {
+  const { cs_id, rating, key_word, resource_id, from_date, to_date, per_page_amount, sort } = req.query
+
 }
