@@ -1,9 +1,33 @@
 import db from '../config/db/mysql'
 import {redis} from '../config/db/redis'
 import { handleFormatDateTime, handleFormatTimestamp, handleGetUnreadNum } from '../function/index'
-
 exports.handleLeaveRoom = async(req, res, next) => {
-
+  const { room_id } = req.params
+  console.log('reqbody', req.body, 'reqparams', req.params)
+  const { rating, comment, identity, is_room_already_close } = req.body
+  console.log('room_id', room_id, 'identity', identity)
+  let leaveRoomSyntax = ''
+  const date = new Date(+new Date() + 8 * 3600 * 1000)
+  const currentTime = handleFormatDateTime(date.toISOString())
+  if(identity === 1) {
+    // 只填上聊天室結束時間
+    leaveRoomSyntax = `UPDATE room SET end_time='${currentTime}' where id = ${room_id}`
+  } else if (identity === 2 && !is_room_already_close) {
+    // 填上結束時間、rating、comment
+    leaveRoomSyntax = `UPDATE room SET end_time='${currentTime}', rating=${rating}, comment='${comment}' where id = ${room_id}`
+  } else if (identity === 2 && is_room_already_close) {
+    // 填上rating、comment
+    leaveRoomSyntax = `UPDATE room SET rating=${rating}, comment='${comment}' where id = ${room_id}`
+  }
+  const leaveRoomRes = await db.execute(leaveRoomSyntax).then(res => res[0])
+  console.log('leaveRoomRes', leaveRoomRes)
+  if(leaveRoomRes.changedRows) {
+    // 表示已修改
+    res.status(200).send(currentTime)
+  } else {
+    // 無此房間
+    res.status(400).send('無此房間')
+  }
 }
 
 exports.handlePair = async(req, res, next) => {
@@ -19,12 +43,13 @@ exports.handlePair = async(req, res, next) => {
     return
   }
   console.log('client_id', client_id, 'cs_id', cs_id)
+  let getCsSyntax = ''
   let pairCsId = cs_id
   let csInfo = {}
   // 取得一位客服人員資料(member_id, name, socketId)
   if(cs_id === 0) {
     // 0為系統自動指派，先找一位客服(先隨便找)
-    const getCsSyntax = `SELECT id as cs_id, name as cs_name FROM administrator_user where resource_id = ${resource_id} limit 0,1`
+    getCsSyntax = `SELECT id as cs_id, name as cs_name FROM administrator_user where resource_id = ${resource_id} limit 0,1`
     const csInfoRes = await db.execute(getCsSyntax).then(res => res[0])
     console.log('csInfo', csInfo)
     csInfo = {
@@ -32,6 +57,16 @@ exports.handlePair = async(req, res, next) => {
       cs_name: csInfoRes[0].cs_name
     }
     pairCsId = csInfoRes[0].cs_id
+  } else {
+    getCsSyntax = `SELECT name as cs_name FROM administrator_user where id = ${cs_id};` 
+    const csInfoRes = await db.execute(getCsSyntax).then(res => res[0])
+    const cs_name = csInfoRes[0].cs_name
+    console.log('cs_nameeee', cs_name)
+    csInfo = {
+      cs_id,
+      cs_name
+    }
+    pairCsId = cs_id
   }
   const currentTime = handleFormatDateTime(date.toISOString())
   console.log('first message', currentTime)
@@ -45,6 +80,7 @@ exports.handlePair = async(req, res, next) => {
   console.log('messageId1', messageId)
   messageId = messageId === 0 ? 1 : messageId + 1
   console.log('messageId2', messageId)
+  console.log('cs info', csInfo)
   const firstMessage = `客服人員 ${csInfo.cs_name} 在線為您服務`
   const firstMessageTimeOut = setTimeout(async() => {
     const firstMessageTime = handleFormatDateTime(date.toISOString())
