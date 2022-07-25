@@ -17,17 +17,20 @@ exports.handleLeaveRoom = async(req, res, next) => {
     leaveRoomSyntax = `UPDATE room SET end_time='${currentTime}', rating=${rating}, comment='${comment}' where id = ${room_id}`
   } else if (identity === 2 && is_room_already_close) {
     // 填上rating、comment
+    console.log("rate here")
     leaveRoomSyntax = `UPDATE room SET rating=${rating}, comment='${comment}' where id = ${room_id}`
   }
+  console.log("rate syntax", leaveRoomSyntax)
   const leaveRoomRes = await db.execute(leaveRoomSyntax).then(res => res[0])
   console.log('leaveRoomRes', leaveRoomRes)
-  if(leaveRoomRes.changedRows) {
-    // 表示已修改
-    res.status(200).send(currentTime)
-  } else {
-    // 無此房間
-    res.status(400).send('無此房間')
-  }
+  res.status(200).send(currentTime)
+  // if(leaveRoomRes.changedRows) {
+  //   // 表示已修改
+  //   res.status(200).send(currentTime)
+  // } else {
+  //   // 無此房間
+  //   res.status(400).send('無此房間')
+  // }
 }
 
 exports.handlePair = async(req, res, next) => {
@@ -43,22 +46,38 @@ exports.handlePair = async(req, res, next) => {
     return
   }
   console.log('client_id', client_id, 'cs_id', cs_id)
-  let getCsSyntax = ''
+  // let getCsSyntax = ''
+  let getCsListSyntax = ''
+  let getPairRoomSyntax = ''
   let pairCsId = cs_id
   let csInfo = {}
   // 取得一位客服人員資料(member_id, name, socketId)
   if(cs_id === 0) {
-    // 0為系統自動指派，先找一位客服(先隨便找)
-    getCsSyntax = `SELECT id as cs_id, name as cs_name FROM administrator_user where resource_id = ${resource_id} limit 0,1`
-    const csInfoRes = await db.execute(getCsSyntax).then(res => res[0])
-    console.log('csInfo', csInfo)
-    csInfo = {
-      cs_id: csInfoRes[0].cs_id,
-      cs_name: csInfoRes[0].cs_name
+    // 0為系統自動指派，先找一位客服，配對給目前相對較沒會員配對的客服
+    // getCsSyntax = `SELECT id as cs_id, name as cs_name FROM administrator_user where resource_id = ${resource_id} limit 0,1`
+    // const csInfoRes = await db.execute(getCsSyntax).then(res => res[0])
+    // console.log('csInfo', csInfo)
+    getCsListSyntax = `SELECT id as cs_id, name as cs_name FROM administrator_user where resource_id = ${resource_id}`;
+    getPairRoomSyntax = `SELECT administrator as cs_id FROM room where resource_id = ${resource_id} and end_time is null`;
+    let getCsListRes = await db.execute(getCsListSyntax).then(res => res[0])
+    let getPairRoomRes = await db.execute(getPairRoomSyntax).then(res => res[0])
+    for(let cs of getCsListRes) {
+      cs.pairNum = 0
     }
-    pairCsId = csInfoRes[0].cs_id
+    for(let room of getPairRoomRes) {
+      getCsListRes.find(i => i.cs_id === room.cs_id).pairNum++
+    }
+    getCsListRes = getCsListRes.sort((a, b) => a.pairNum - b.pairNum)
+    console.log("result", getCsListRes)
+
+    // 取得合適的cs
+    csInfo = {
+      cs_id: getCsListRes[0].cs_id,
+      cs_name: getCsListRes[0].cs_name
+    }
+    pairCsId = getCsListRes[0].cs_id
   } else {
-    getCsSyntax = `SELECT name as cs_name FROM administrator_user where id = ${cs_id};` 
+    const getCsSyntax = `SELECT name as cs_name FROM administrator_user where id = ${cs_id}`; 
     const csInfoRes = await db.execute(getCsSyntax).then(res => res[0])
     const cs_name = csInfoRes[0].cs_name
     console.log('cs_nameeee', cs_name)

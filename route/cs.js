@@ -4,7 +4,8 @@ import {
   handleGetLeaderBoard, 
   handleGetPersonalRating, 
   handleGetResourceWebsiteList, 
-  handleGetCommentList
+  handleGetCommentList,
+  handleCsLogin
 } from '../controller/cs'
 const router = express.Router()
 
@@ -23,4 +24,6 @@ router.route('/personal-rating/resource')
 router.route('/personal-rating/list')
   .get(handleGetCommentList)
 
+router.route('/token')
+  .post(handleCsLogin)
 export default router

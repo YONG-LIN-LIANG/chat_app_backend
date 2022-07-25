@@ -23,8 +23,9 @@ exports.handleReadMessage = async(req, res, next) => {
   console.log('req.body', req.body)
   // 先取得已讀訊息key-value
   const readState = await redisDB.get(`message-${room_id}-read`)
-  
+  console.log("readState", readState)
   const readStateSplit = readState.split(';')
+  
   const readRecord = identity === 1 ? readStateSplit[0] : readStateSplit[1]
   const historyReadId = +readRecord.split('-')[1]
   let currentReadId = await handleGetLatestReadMessageId(redisDB, identity, room_id, historyReadId)

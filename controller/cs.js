@@ -103,3 +103,16 @@ exports.handleGetCommentList = async(req, res, next) => {
   const { cs_id, rating, key_word, resource_id, from_date, to_date, per_page_amount, sort } = req.query
 
 }
+
+exports.handleCsLogin = async (req, res, next) => {
+  const { account, password } = req.body
+  const loginSyntax = `SELECT id as member_id, resource_id, name as cs_name FROM administrator_user where account = "${account}" and password = "${password}";`
+  const loginRes = await db.execute(loginSyntax).then(res => res[0])
+  console.log('ddd', loginRes)
+  if(loginRes.length) {
+    res.status(200).send(loginRes[0])
+  } else {
+    res.status(401).send("Unauthorized")
+  }
+  return
+}
