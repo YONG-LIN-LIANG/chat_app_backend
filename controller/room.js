@@ -3,9 +3,7 @@ import {redis} from '../config/db/redis'
 import { handleFormatDateTime, handleFormatTimestamp, handleGetUnreadNum } from '../function/index'
 exports.handleLeaveRoom = async(req, res, next) => {
   const { room_id } = req.params
-  console.log('reqbody', req.body, 'reqparams', req.params)
   const { rating, comment, identity, is_room_already_close } = req.body
-  console.log('room_id', room_id, 'identity', identity)
   let leaveRoomSyntax = ''
   const date = new Date(+new Date() + 8 * 3600 * 1000)
   const currentTime = handleFormatDateTime(date.toISOString())
@@ -17,12 +15,9 @@ exports.handleLeaveRoom = async(req, res, next) => {
     leaveRoomSyntax = `UPDATE room SET end_time='${currentTime}', rating=${rating}, comment='${comment}' where id = ${room_id}`
   } else if (identity === 2 && is_room_already_close) {
     // 填上rating、comment
-    console.log("rate here")
     leaveRoomSyntax = `UPDATE room SET rating=${rating}, comment='${comment}' where id = ${room_id}`
   }
-  console.log("rate syntax", leaveRoomSyntax)
   const leaveRoomRes = await db.execute(leaveRoomSyntax).then(res => res[0])
-  console.log('leaveRoomRes', leaveRoomRes)
   res.status(200).send(currentTime)
   // if(leaveRoomRes.changedRows) {
   //   // 表示已修改
@@ -45,8 +40,6 @@ exports.handlePair = async(req, res, next) => {
     res.status(400).send()
     return
   }
-  console.log('client_id', client_id, 'cs_id', cs_id)
-  // let getCsSyntax = ''
   let getCsListSyntax = ''
   let getPairRoomSyntax = ''
   let pairCsId = cs_id
@@ -56,7 +49,6 @@ exports.handlePair = async(req, res, next) => {
     // 0為系統自動指派，先找一位客服，配對給目前相對較沒會員配對的客服
     // getCsSyntax = `SELECT id as cs_id, name as cs_name FROM administrator_user where resource_id = ${resource_id} limit 0,1`
     // const csInfoRes = await db.execute(getCsSyntax).then(res => res[0])
-    // console.log('csInfo', csInfo)
     getCsListSyntax = `SELECT id as cs_id, name as cs_name FROM administrator_user where resource_id = ${resource_id}`;
     getPairRoomSyntax = `SELECT administrator as cs_id FROM room where resource_id = ${resource_id} and end_time is null`;
     let getCsListRes = await db.execute(getCsListSyntax).then(res => res[0])
@@ -68,8 +60,6 @@ exports.handlePair = async(req, res, next) => {
       getCsListRes.find(i => i.cs_id === room.cs_id).pairNum++
     }
     getCsListRes = getCsListRes.sort((a, b) => a.pairNum - b.pairNum)
-    console.log("result", getCsListRes)
-
     // 取得合適的cs
     csInfo = {
       cs_id: getCsListRes[0].cs_id,
@@ -80,7 +70,6 @@ exports.handlePair = async(req, res, next) => {
     const getCsSyntax = `SELECT name as cs_name FROM administrator_user where id = ${cs_id}`; 
     const csInfoRes = await db.execute(getCsSyntax).then(res => res[0])
     const cs_name = csInfoRes[0].cs_name
-    console.log('cs_nameeee', cs_name)
     csInfo = {
       cs_id,
       cs_name
@@ -88,7 +77,6 @@ exports.handlePair = async(req, res, next) => {
     pairCsId = cs_id
   }
   const currentTime = handleFormatDateTime(date.toISOString())
-  console.log('first message', currentTime)
   const createRoomSyntax = `INSERT INTO room (client, administrator, begin_time, resource_id) VALUES (${client_id}, ${pairCsId}, '${currentTime}', ${resource_id})`
   const roomId = await db.execute(createRoomSyntax).then(res => res[0].insertId)
   
@@ -96,15 +84,11 @@ exports.handlePair = async(req, res, next) => {
   await redisDB.rename(`smessage-${client_id}-0`, `smessage-${roomId}`)
   // 發布人員第一則訊息(客服人員xxx在線為您服務)
   let messageId = await redisDB.lLen(`message-${roomId}`)
-  console.log('messageId1', messageId)
   messageId = messageId === 0 ? 1 : messageId + 1
-  console.log('messageId2', messageId)
-  console.log('cs info', csInfo)
   const firstMessage = `客服人員 ${csInfo.cs_name} 在線為您服務`
   const firstMessageTimeOut = setTimeout(async() => {
     const firstMessageTime = handleFormatDateTime(date.toISOString())
     await redisDB.rPush(`message-${roomId}`, `${messageId};cs-${csInfo.cs_id};${csInfo.cs_name};${firstMessage};${firstMessageTime}`)
-    console.log('roomId', roomId)
     const firstMessageObj = {
       status: 1,
       messageId,
@@ -122,7 +106,6 @@ exports.handlePair = async(req, res, next) => {
     // 取得已讀狀況
     const readStatus = await redisDB.get(`message-${roomId}-read`)
     const dataSplit = lastMessage.split(';')
-    console.log('dataSplit', dataSplit)
     const readMessageId = +readStatus.split(';')[0].split('-')[1]
     const message = dataSplit[3]
     messageId = +dataSplit[0]
@@ -142,8 +125,6 @@ exports.handlePair = async(req, res, next) => {
       group: group_name,
       website,
     }
-    console.log('roomInfooo', roomInfo)
-    //
     res.status(201).send({...csInfo, room_id: roomId, first_message: firstMessageObj, cs_new_user_room: roomInfo})
     await redisDB.disconnect()
     clearTimeout(firstMessageTimeOut)
@@ -176,9 +157,7 @@ const handleFormatSystemMessage = (smessage) => {
 }
 
 const handleGetOfflineSmessage = async(redisDB, client_id, group_name, website_name) => {
-  console.log('testtt', redisDB, client_id, group_name, website_name)
   const offlineSmessageList = await redisDB.lRange(`smessage-${client_id}-0`, 0, -1)
-  console.log('offlineSmessageList', offlineSmessageList)
   if(offlineSmessageList.length){
     let offlineChatList = []
     for(let smessage of offlineSmessageList) {
@@ -203,17 +182,11 @@ const handleGetOfflineSmessage = async(redisDB, client_id, group_name, website_n
 exports.handleGetRoomMessage = async(req, res, next) => {
   // 客戶端才需要resource_id，客服端只需要client_id
   const { client_id, resource_id } = req.query
-  console.log('req.query', req.query)
-
-  
-
   // 取得該會員所有房間
   const RoomSyntax = `SELECT a.id as cs_member_id, r.id as room_id, b.name as group_name, w.website_name, a.name as cs_name, r.begin_time ,r.end_time FROM room r left join administrator_user a on r.administrator = a.id left join client_user c on r.client = c.id left join web_resource w on r.resource_id = w.id left join business_group b on w.group_id = b.id where r.client=${client_id} order by r.begin_time;`
   // 檢查rooms的client有沒有自己
   const roomList = await db.execute(RoomSyntax).then(res => res[0])
-  console.log('roomList', roomList)
   const redisDB = await redis()
-
   // 取得網站來源的網站名稱及group名稱(未配對時使用，當roomList最後一筆的end_time不為空時才需要打來源資料)
   // 表示目前未配對
   let offlineRoom
@@ -223,8 +196,6 @@ exports.handleGetRoomMessage = async(req, res, next) => {
     const {website_name, group_name} = getResourceInfo[0]
     offlineRoom = await handleGetOfflineSmessage(redisDB, client_id, group_name, website_name)
   }
-  console.log('offlineRoom', offlineRoom)
-
   let data = []
   if(roomList.length){
     // 取得目前已讀狀況(登入後才需要)
@@ -245,7 +216,6 @@ exports.handleGetRoomMessage = async(req, res, next) => {
       // 取出該房間的聊天訊息
       let messageList = await redisDB.lRange(`message-${item.room_id}`, 0, -1)
       let smessageList = await redisDB.lRange(`smessage-${item.room_id}`, 0, -1)
-      console.log('messageList', messageList)
       let chatList = []
       let sChatList = []
       // room裡的人員訊息
@@ -261,12 +231,10 @@ exports.handleGetRoomMessage = async(req, res, next) => {
           created_time: dataSplit[4],
           timeStampDate: handleFormatTimestamp(dataSplit[4])
         }
-        console.log('messageObj', messageObj)
         chatList.push(messageObj)
       }
       // room裡的系統訊息
       for(let smessage of smessageList) {
-        console.log('smessage', smessage)
         const messageObj = handleFormatSystemMessage(smessage)
         sChatList.push(messageObj)
       }
@@ -279,7 +247,6 @@ exports.handleGetRoomMessage = async(req, res, next) => {
     if(offlineRoom !== undefined && offlineRoom !== null && offlineRoom.chatList.length){
       data.push(offlineRoom)
     }
-    console.log('offlineMessageList', offlineRoom)
     res.status(200).send(data)
   } else if (!roomList.length && offlineRoom !== null && offlineRoom !== undefined) {
     data.push(offlineRoom)

@@ -4,17 +4,14 @@ exports.handleLogin = (req, res, next) => {
   // 先打員工API
   // 成功後把員工API存在資料庫中並產生access token
   // 最後回傳使用者資料
-  console.log("go here")
 
 }
 
 exports.handleGetCsAuthWebsiteList = async (req, res, next) => {
-  console.log("aaaaaaaaaaa")
   const { team_id } = req.user
   // 先取得所有網站清單
   const getWebsiteListSyntax = `SELECT id as resource_id, website_name FROM web_resource`
   const getWebsiteList = await db.execute(getWebsiteListSyntax).then(res => res[0])
-  console.log("list", getWebsiteList)
   // 使用team_id找出底下同個team_id的客服
   const getCsAuthWebsiteListSyntax = `
     SELECT au.id as user_id, au.employee_no, au.name, arl.website_list, b.name as group_name FROM administrator_user au 

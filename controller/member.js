@@ -3,7 +3,6 @@ import {handleCheckType} from '../function/index'
 // const checkType = require('../function/index').handleCheckType;
 exports.handleAddClientMember = async(req, res, next) => {
   const { uuid, name, identity } = req.body;
-  console.log('req.body', req.body)
   if(!(handleCheckType(uuid, 'string') && handleCheckType(name, 'string') && handleCheckType(identity, 'number'))){
     res.status(400).send()
     return
@@ -25,7 +24,6 @@ exports.handleAddClientMember = async(req, res, next) => {
 // 待修改
 exports.handleAddCsMember = async(req, res, next) => {
   const { uuid, name, identity, resource_id, account, password } = req.body;
-  console.log('req.body', req.body)
   if(!(handleCheckType(uuid, 'string') && handleCheckType(name, 'string') && handleCheckType(identity, 'number'))){
     res.status(400).send()
     return
@@ -46,10 +44,8 @@ exports.handleAddCsMember = async(req, res, next) => {
 
 exports.handleGetResourceInfo = async(req, res, next) => {
   const {resource_id} = req.params
-  console.log('resource_id', resource_id)
   const getResourceInfoSyntax = `SELECT w.website_name, b.name as group_name FROM web_resource w left join business_group b on w.group_id = b.id where w.id=${resource_id}`;
   const getResourceInfo = await db.execute(getResourceInfoSyntax).then(res => res[0])
-  console.log('getResourceInfo', getResourceInfo)
   if(getResourceInfo.length) {
     return res.status(200).send(getResourceInfo[0])
   }else{
