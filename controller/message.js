@@ -1,17 +1,73 @@
 import { redis } from '../config/db/redis'
-import { handleFormatDateTime } from '../function/index'
+import { handleFormatDateTime, handleGetUnreadNum } from '../function/index'
+const handleGetLatestReadMessageId = async (redisDB, status, roomId, historyReadId) => {
+  const identity = status === 1 ? 'cs' : 'client'
+  const messageList = await redisDB.lRange(`message-${roomId}`, historyReadId, -1)
+  if(messageList.length) {
+    const targetList = messageList.filter(i => {
+      const messageSplit = i.split(';')
+      const messageStatus = messageSplit[1].split('-')[0]
+      const targetMessageId = +messageSplit[0]
+      if(messageStatus !== identity && historyReadId !== targetMessageId) return i
+    })
+    console.log('targetList', targetList)
+    if(!targetList.length) return null
+    return targetList[targetList.length - 1].split(';')[0]
+  } else return null
+  
+}
 exports.handleReadMessage = async(req, res, next) => {
-
+  const redisDB = await redis()
+  // identity 用來判斷哪個對象實施已讀
+  const { identity, room_id } = req.body
+  console.log('req.body', req.body)
+  // 先取得已讀訊息key-value
+  const readState = await redisDB.get(`message-${room_id}-read`)
+  console.log("readState", readState)
+  const readStateSplit = readState.split(';')
+  
+  const readRecord = identity === 1 ? readStateSplit[0] : readStateSplit[1]
+  const historyReadId = +readRecord.split('-')[1]
+  let currentReadId = await handleGetLatestReadMessageId(redisDB, identity, room_id, historyReadId)
+  console.log('currentReadId', currentReadId)
+  // 這邊是如果已經已讀最新的訊息，就繼續用舊的messageId
+  if(identity === 1 && currentReadId === null) {
+    currentReadId = +readStateSplit[0].split('-')[1]
+  } else if(identity === 2 && currentReadId === null) {
+    currentReadId = +readStateSplit[1].split('-')[1]
+  }
+  // 更新message-roomId-read
+  let newReadState
+  if(identity === 1) {
+    newReadState = `cs-${currentReadId};client-${+readStateSplit[1].split('-')[1]}`
+  } else {
+    newReadState = `cs-${+readStateSplit[0].split('-')[1]};client-${currentReadId}`
+  }
+  const result = await redisDB.set(`message-${room_id}-read`, `${newReadState}`)
+  console.log('result', result)
+  if(result === 'OK') {
+    res.status(201).send({message_id: +currentReadId})
+  } else {
+    res.status(400).send()
+  }
+  // 回傳目前最新的message_id
+  // 如果是客服端，取客戶端最新一條
+  await redisDB.disconnect()
+  return
 }
 
 exports.handleSendMessage = async(req, res, next) => {
   const { identity } = req.body
+  
   console.log('identity', identity)
   const redisDB = await redis()
   if(identity === 0) {
+    const date = new Date(+new Date() + 8 * 3600 * 1000)
     console.log('reqq body', req.body)
     const { memberId, roomId, questionId, question, questionContent, answer } = req.body
-    const currentTime = handleFormatDateTime(new Date().toISOString())
+    console.log('date1', +new Date() + 8 * 3600 * 1000)
+    const currentTime = handleFormatDateTime(date.toISOString())
+    console.log('system currentTime', currentTime)
     let cs_id
     let formatQuestionContent
     console.log('questionCon', questionContent)
@@ -42,19 +98,34 @@ exports.handleSendMessage = async(req, res, next) => {
     }
   } else if (identity === 1 || identity === 2) {
     // 處理人員發送訊息
-    const currentTime = handleFormatDateTime(new Date().toISOString())
-    const { identity, roomId, memberId, name, message, messageId } = req.body
+    const date = new Date(+new Date() + 8 * 3600 * 1000)
+    console.log('date2', +new Date() + 8 * 3600 * 1000 + 500)
+    const currentTime = handleFormatDateTime(date.toISOString())
+    console.log('currentTime', currentTime)
+    const { identity, roomId, memberId, name, message } = req.body
     console.log('7777', identity, roomId, memberId, name, message)
     const status = identity === 1 ? `cs-${memberId}` : `client-${memberId}`
     // let messageId = await redisDB.lLen(`message-${roomId}`)
     // messageId = messageId === 0 ? 1 : messageId++
     console.log('messageId', messageId)
+    const lastMessage = await redisDB.lRange(`message-${roomId}`, -1, -1)
+    const messageId = +lastMessage[0].split(';')[0] + 1
+    console.log('messageIdwww', messageId)
     const messageInstance = `${messageId};${status};${name};${message};${currentTime}`
     const result = await redisDB.rPush(`message-${roomId}`, messageInstance)
+
+    // 取得unread數量
+    const readStatus = await redisDB.get(`message-${roomId}-read`)
+    const dataSplit = lastMessage[0].split(';')
+    console.log('dataSplit', dataSplit)
+    const readMessageId = +readStatus.split(';')[0].split('-')[1]
+    const anotherIdentity = identity === 1 ? 2 : identity === 2 ? 1 : null
+    const unread = await handleGetUnreadNum(redisDB, roomId, readMessageId, anotherIdentity)
+    console.log('unread', unread)
     if(result){
       // 塞值成功，返回成功
       
-      res.status(201).send({currentTime, messageId})
+      res.status(201).send({currentTime, messageId, unread})
 
     }
     
