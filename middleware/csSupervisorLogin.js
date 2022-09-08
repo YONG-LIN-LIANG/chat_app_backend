@@ -8,7 +8,6 @@ export const csSupervisorLoginMiddleware = async (req, res, next) => {
   if(checkUserExist.length) {
     const { id, team_id, employee_no } = checkUserExist[0]
     const payload = { id, team_id, employee_no }
-    console.log("payload", payload)
     const access = await signJWT(payload, "5m")
     const data = {...payload, access}
     return res.status(200).send(data)

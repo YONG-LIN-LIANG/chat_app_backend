@@ -28,7 +28,6 @@ app.use('/question', questionRoute)
 app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerJsDoc))
 // 中介攔截錯誤
 app.use((err, req, res, next) => {
-  console.log(err.code)
   res.status(500).json({
     message: 'Something went wrong'
   })
