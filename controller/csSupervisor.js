@@ -1,5 +1,5 @@
-import db from '../config/db/mysql'
-exports.handleLogin = (req, res, next) => {
+import db from '../config/db/mysql.js'
+const handleLogin = (req, res, next) => {
   // 取得帳號密碼
   // 先打員工API
   // 成功後把員工API存在資料庫中並產生access token
@@ -7,7 +7,7 @@ exports.handleLogin = (req, res, next) => {
 
 }
 
-exports.handleGetCsAuthWebsiteList = async (req, res, next) => {
+const handleGetCsAuthWebsiteList = async (req, res, next) => {
   const { team_id } = req.user
   // 先取得所有網站清單
   const getWebsiteListSyntax = `SELECT id as resource_id, website_name FROM web_resource`
@@ -38,3 +38,5 @@ exports.handleGetCsAuthWebsiteList = async (req, res, next) => {
   } else return res.status(204).send()
   
 }
+
+export { handleLogin, handleGetCsAuthWebsiteList }

@@ -1,19 +1,20 @@
-import dotenv from 'dotenv';
+import * as dotenv from 'dotenv'
 dotenv.config();
 import cors from 'cors';
 import swaggerUI from 'swagger-ui-express';
-import swaggerJsDoc from './swagger.json';
+import swaggerJsDoc from './swagger.js';
+// const swaggerJsDoc = require("./swagger.json")
 import express from 'express';
 const app = express()
 // api 路由
-import clientRoute from './route/client'
-import csRoute from './route/cs'
-import csSupervisorRoute from "./route/csSupervisor"
-import memberRoute from './route/member'
-import messageRoute from './route/message'
-import roomRoute from './route/room'
-import questionRoute from './route/question'
-import tokenRoute from './route/token'
+import clientRoute from './route/client.js'
+import csRoute from './route/cs.js'
+import csSupervisorRoute from "./route/csSupervisor.js"
+import memberRoute from './route/member.js'
+import messageRoute from './route/message.js'
+import roomRoute from './route/room.js'
+import questionRoute from './route/question.js'
+import tokenRoute from './route/token.js'
 app.use(cors())
 app.use(express.json())
 app.use('/token', tokenRoute)

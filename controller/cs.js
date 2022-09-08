@@ -1,6 +1,6 @@
-import db from '../config/db/mysql'
-import {redis} from '../config/db/redis'
-import {handleGetUnreadNum, handleFormatTimestamp} from '../function/index'
+import db from '../config/db/mysql.js'
+import {redis} from '../config/db/redis.js'
+import {handleGetUnreadNum, handleFormatTimestamp} from '../function/index.js'
 // const handleGetUnreadNum = async (redisDB, roomId, messageId, status) => {
 //   const identity = status === 1 ? 'cs' : 'client'
 //   const calculateMessageId = messageId ? messageId - 1 : 0
@@ -15,7 +15,7 @@ import {handleGetUnreadNum, handleFormatTimestamp} from '../function/index'
 //   })
 //   return unreadMessageList.length
 // }
-exports.handleGetAllUserRoom = async(req, res, next) => {
+const handleGetAllUserRoom = async(req, res, next) => {
   const redisDB = await redis()
   const { cs_id } = req.params
   // 在room使用cs_id先撈出所有相關的room
@@ -59,11 +59,11 @@ exports.handleGetAllUserRoom = async(req, res, next) => {
   return
 }
 
-exports.handleGetLeaderBoard = async(req, res, next) => {
+const handleGetLeaderBoard = async(req, res, next) => {
 
 }
 
-exports.handleGetPersonalRating = async(req, res, next) => {
+const handleGetPersonalRating = async(req, res, next) => {
   const { cs_id } = req.params
   const getRatingListSyntax = `SELECT rating FROM room where administrator = ${cs_id} and end_time is not null;`
   const getRatingList = await db.execute(getRatingListSyntax).then(res => res[0])
@@ -81,7 +81,7 @@ exports.handleGetPersonalRating = async(req, res, next) => {
   res.status(200).send(rating)
 }
 
-exports.handleGetResourceWebsiteList = async(req, res, next) => {
+const handleGetResourceWebsiteList = async(req, res, next) => {
   const { group_id } = req.query
   let getListSyntax = ''
   if(!group_id) {
@@ -92,11 +92,11 @@ exports.handleGetResourceWebsiteList = async(req, res, next) => {
   res.status(200).send(getList)
 }
 
-exports.handleGetCommentList = async(req, res, next) => {
+const handleGetCommentList = async(req, res, next) => {
   const { cs_id, rating, key_word, resource_id, from_date, to_date, per_page_amount, sort } = req.query
 }
 
-exports.handleCsLogin = async (req, res, next) => {
+const handleCsLogin = async (req, res, next) => {
   const { account, password } = req.body
   const loginSyntax = `SELECT id as member_id, resource_id, name as cs_name FROM administrator_user where account = "${account}" and password = "${password}";`
   const loginRes = await db.execute(loginSyntax).then(res => res[0])
@@ -106,4 +106,13 @@ exports.handleCsLogin = async (req, res, next) => {
     res.status(401).send("Unauthorized")
   }
   return
+}
+
+export { 
+  handleGetAllUserRoom, 
+  handleGetLeaderBoard, 
+  handleGetPersonalRating, 
+  handleGetResourceWebsiteList, 
+  handleGetCommentList, 
+  handleCsLogin 
 }

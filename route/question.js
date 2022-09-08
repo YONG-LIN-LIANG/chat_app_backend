@@ -1,8 +1,7 @@
-const express = require('express')
+import express from "express"
 const router = express.Router()
-const questionController = require('../controller/question')
-
+import { handleGetQuestion } from "../controller/question.js"
 router.route('/')
-  .get(questionController.handleGetQuestion)
+  .get(handleGetQuestion)
 
-module.exports = router
+export default router

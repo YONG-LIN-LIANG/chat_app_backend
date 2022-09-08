@@ -1,7 +1,7 @@
-import db from '../config/db/mysql'
-import {handleCheckType} from '../function/index'
+import db from '../config/db/mysql.js'
+import {handleCheckType} from '../function/index.js'
 // const checkType = require('../function/index').handleCheckType;
-exports.handleAddClientMember = async(req, res, next) => {
+const handleAddClientMember = async(req, res, next) => {
   const { uuid, name, identity } = req.body;
   if(!(handleCheckType(uuid, 'string') && handleCheckType(name, 'string') && handleCheckType(identity, 'number'))){
     res.status(400).send()
@@ -22,7 +22,7 @@ exports.handleAddClientMember = async(req, res, next) => {
 }
 
 // 待修改
-exports.handleAddCsMember = async(req, res, next) => {
+const handleAddCsMember = async(req, res, next) => {
   const { uuid, name, identity, resource_id, account, password } = req.body;
   if(!(handleCheckType(uuid, 'string') && handleCheckType(name, 'string') && handleCheckType(identity, 'number'))){
     res.status(400).send()
@@ -42,7 +42,7 @@ exports.handleAddCsMember = async(req, res, next) => {
   res.status(201).json({memberId})
 }
 
-exports.handleGetResourceInfo = async(req, res, next) => {
+const handleGetResourceInfo = async(req, res, next) => {
   const {resource_id} = req.params
   const getResourceInfoSyntax = `SELECT w.website_name, b.name as group_name FROM web_resource w left join business_group b on w.group_id = b.id where w.id=${resource_id}`;
   const getResourceInfo = await db.execute(getResourceInfoSyntax).then(res => res[0])
@@ -52,3 +52,5 @@ exports.handleGetResourceInfo = async(req, res, next) => {
     return res.status(400).send()
   }
 }
+
+export { handleAddClientMember, handleAddCsMember, handleGetResourceInfo }

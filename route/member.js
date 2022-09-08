@@ -1,5 +1,5 @@
 import express from 'express'
-import {handleAddClientMember, handleAddCsMember, handleGetResourceInfo} from '../controller/member'
+import {handleAddClientMember, handleAddCsMember, handleGetResourceInfo} from '../controller/member.js'
 const router = express.Router()
 router.route('/client/add')
   .post(handleAddClientMember)

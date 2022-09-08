@@ -1,6 +1,5 @@
-const db = require('../config/db/mysql');
-const checkType = require('../function/index').handleCheckType;
-exports.handleGetQuestion = async(req, res, next) => {
+import db from "../config/db/mysql.js"
+const handleGetQuestion = async(req, res, next) => {
   const {question_id, resource_id} = req.query
   const getQuestionSyntax = `SELECT id as question_id, resource_id, question_name, question_content FROM question where id = ${question_id} and resource_id = ${resource_id}`
   const question = await db.execute(getQuestionSyntax).then(res => res[0])
@@ -18,3 +17,5 @@ exports.handleGetQuestion = async(req, res, next) => {
   }
   res.status(204).send()
 }
+
+export { handleGetQuestion }

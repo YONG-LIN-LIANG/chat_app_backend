@@ -1,5 +1,5 @@
 import express from 'express'
-import {handleLogin, handleLogout, handleRefresh} from '../controller/token'
+import { handleLogin, handleLogout } from '../controller/token.js'
 const router = express.Router()
 router.route('/')
   .post(handleLogin)

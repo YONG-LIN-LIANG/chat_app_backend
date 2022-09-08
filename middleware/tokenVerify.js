@@ -1,5 +1,5 @@
 
-import { verifyJWT } from "../utils/jwt.utils"
+import { verifyJWT } from "../utils/jwt.utils.js"
 export async function checkAuthMiddleware(req, res, next) {
   const token = req.header("Authorization");
   if(!token || !token.startsWith("Bearer ")) {

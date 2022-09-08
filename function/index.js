@@ -1,15 +1,15 @@
-exports.handleCheckType = (value, expectedResult) => {
+const handleCheckType = (value, expectedResult) => {
   return typeof(value) === expectedResult
 }
-exports.handleFormatTimestamp = (time) => {
+const handleFormatTimestamp = (time) => {
   return Math.floor(new Date(time) / 1000);
 }
-exports.handleFormatDateTime = (dateTime) => {
+const handleFormatDateTime = (dateTime) => {
   return dateTime.
   replace(/T/, ' ').  
   replace(/\..+/, '') 
 }
-exports.handleGetUnreadNum = async (redisDB, roomId, messageId, status) => {
+const handleGetUnreadNum = async (redisDB, roomId, messageId, status) => {
   const identity = status === 1 ? 'cs' : 'client'
   const calculateMessageId = messageId ? messageId - 1 : 0
   // 先侷限範圍
@@ -23,3 +23,5 @@ exports.handleGetUnreadNum = async (redisDB, roomId, messageId, status) => {
   })
   return unreadMessageList.length
 }
+
+export { handleCheckType, handleFormatTimestamp, handleFormatDateTime, handleGetUnreadNum }

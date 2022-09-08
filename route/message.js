@@ -1,11 +1,10 @@
-const express = require('express')
+import express from "express"
 const router = express.Router()
-const messageController = require('../controller/message')
-
+import { handleReadMessage, handleSendMessage } from "../controller/message.js"
 router.route('/read')
-  .post(messageController.handleReadMessage)
+  .post(handleReadMessage)
 
 router.route('/send')
-  .post(messageController.handleSendMessage)
+  .post(handleSendMessage)
 
-module.exports = router
+export default router

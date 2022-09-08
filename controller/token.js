@@ -1,8 +1,10 @@
 
-exports.handleLogin = async(req, res, next) => {
+const handleLogin = async(req, res, next) => {
   // 使用員工API進行登入
 }
 
-exports.handleLogout = async(req, res, next) => {
+const handleLogout = async(req, res, next) => {
   // 使用員工API進行登出
 }
+
+export { handleLogin, handleLogout }

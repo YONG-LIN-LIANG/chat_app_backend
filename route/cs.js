@@ -6,7 +6,7 @@ import {
   handleGetResourceWebsiteList, 
   handleGetCommentList,
   handleCsLogin
-} from '../controller/cs'
+} from '../controller/cs.js'
 const router = express.Router()
 
 router.route('/room/list/:cs_id')

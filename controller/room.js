@@ -1,7 +1,7 @@
-import db from '../config/db/mysql'
-import {redis} from '../config/db/redis'
-import { handleFormatDateTime, handleFormatTimestamp, handleGetUnreadNum } from '../function/index'
-exports.handleLeaveRoom = async(req, res, next) => {
+import db from '../config/db/mysql.js'
+import {redis} from '../config/db/redis.js'
+import { handleFormatDateTime, handleFormatTimestamp, handleGetUnreadNum } from '../function/index.js'
+const handleLeaveRoom = async(req, res, next) => {
   const { room_id } = req.params
   const { rating, comment, identity, is_room_already_close } = req.body
   let leaveRoomSyntax = ''
@@ -28,7 +28,7 @@ exports.handleLeaveRoom = async(req, res, next) => {
   // }
 }
 
-exports.handlePair = async(req, res, next) => {
+const handlePair = async(req, res, next) => {
   const date = new Date(+new Date() + 8 * 3600 * 1000 + 2000)
   const redisDB = await redis()
   const { client_id, cs_id, resource_id } = req.body
@@ -179,7 +179,7 @@ const handleGetOfflineSmessage = async(redisDB, client_id, group_name, website_n
   return null
 }
 
-exports.handleGetRoomMessage = async(req, res, next) => {
+const handleGetRoomMessage = async(req, res, next) => {
   // 客戶端才需要resource_id，客服端只需要client_id
   const { client_id, resource_id } = req.query
   // 取得該會員所有房間
@@ -259,3 +259,5 @@ exports.handleGetRoomMessage = async(req, res, next) => {
   await redisDB.disconnect()
   return
 }
+
+export { handleLeaveRoom, handlePair, handleGetRoomMessage }

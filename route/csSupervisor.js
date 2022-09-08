@@ -1,9 +1,9 @@
 import express from 'express'
-import { handleLogin, handleGetCsAuthWebsiteList } from '../controller/csSupervisor'
-import { csSupervisorLoginMiddleware } from "../middleware/csSupervisorLogin"
-import { checkAuthMiddleware } from "../middleware/tokenVerify"
+import { handleLogin, handleGetCsAuthWebsiteList } from '../controller/csSupervisor.js'
+import { csSupervisorLoginMiddleware } from "../middleware/csSupervisorLogin.js"
+import { checkAuthMiddleware } from "../middleware/tokenVerify.js"
 const router = express.Router()
 router.route("/token").post(csSupervisorLoginMiddleware, handleLogin)
 
 router.route("/cs_auth_website").get(checkAuthMiddleware, handleGetCsAuthWebsiteList)
-module.exports = router
+export default router

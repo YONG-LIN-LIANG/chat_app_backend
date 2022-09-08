@@ -1,5 +1,5 @@
-import { redis } from '../config/db/redis'
-import { handleFormatDateTime, handleGetUnreadNum } from '../function/index'
+import { redis } from '../config/db/redis.js'
+import { handleFormatDateTime, handleGetUnreadNum } from '../function/index.js'
 const handleGetLatestReadMessageId = async (redisDB, status, roomId, historyReadId) => {
   const identity = status === 1 ? 'cs' : 'client'
   const messageList = await redisDB.lRange(`message-${roomId}`, historyReadId, -1)
@@ -15,7 +15,7 @@ const handleGetLatestReadMessageId = async (redisDB, status, roomId, historyRead
   } else return null
   
 }
-exports.handleReadMessage = async(req, res, next) => {
+const handleReadMessage = async(req, res, next) => {
   const redisDB = await redis()
   // identity 用來判斷哪個對象實施已讀
   const { identity, room_id } = req.body
@@ -51,7 +51,7 @@ exports.handleReadMessage = async(req, res, next) => {
   return
 }
 
-exports.handleSendMessage = async(req, res, next) => {
+const handleSendMessage = async(req, res, next) => {
   const { identity } = req.body
   const redisDB = await redis()
   if(identity === 0) {
@@ -104,3 +104,5 @@ exports.handleSendMessage = async(req, res, next) => {
   await redisDB.disconnect()
   return
 }
+
+export { handleReadMessage, handleSendMessage}

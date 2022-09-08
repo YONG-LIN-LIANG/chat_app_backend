@@ -1,15 +1,14 @@
-const express = require('express')
+import express from "express"
 const router = express.Router()
-const roomController = require('../controller/room')
-
+import { handleLeaveRoom, handlePair, handleGetRoomMessage } from "../controller/room.js"
 router.route('/leave/:room_id')
-  .put(roomController.handleLeaveRoom)
+  .put(handleLeaveRoom)
 
 router.route('/pair')
-  .post(roomController.handlePair)
+  .post(handlePair)
 
 router.route('/message')
-  .get(roomController.handleGetRoomMessage)
+  .get(handleGetRoomMessage)
 
 
-module.exports = router
+export default router
