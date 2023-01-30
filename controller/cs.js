@@ -98,6 +98,7 @@ const handleGetCommentList = async(req, res, next) => {
 
 const handleCsLogin = async (req, res, next) => {
   const { account, password } = req.body
+  // console.log('jjj', account, password)
   const loginSyntax = `SELECT id as member_id, resource_id, name as cs_name FROM administrator_user where account = "${account}" and password = "${password}";`
   const loginRes = await db.execute(loginSyntax).then(res => res[0])
   if(loginRes.length) {
