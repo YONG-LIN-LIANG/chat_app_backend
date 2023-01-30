@@ -1,14 +1,29 @@
-const express = require('express')
+import express from 'express'
+import {
+  handleGetAllUserRoom, 
+  handleGetLeaderBoard, 
+  handleGetPersonalRating, 
+  handleGetResourceWebsiteList, 
+  handleGetCommentList,
+  handleCsLogin
+} from '../controller/cs.js'
 const router = express.Router()
-const csController = require('../controller/cs')
 
-router.route('/room/:cs_uuid')
-  .get(csController.handleGetAllUserRoom)
+router.route('/room/list/:cs_id')
+  .get(handleGetAllUserRoom)
 
 router.route('/leader-board')
-  .get(csController.handleGetLeaderBoard)
+  .get(handleGetLeaderBoard)
 
-router.route('/leader-board/:cs_uuid')
-  .get(csController.handleGetPersonalRating)
+router.route('/personal-rating/all/:cs_id')
+  .get(handleGetPersonalRating)
 
-module.exports = router
+router.route('/personal-rating/resource')
+  .get(handleGetResourceWebsiteList)
+
+router.route('/personal-rating/list')
+  .get(handleGetCommentList)
+
+router.route('/token')
+  .post(handleCsLogin)
+export default router

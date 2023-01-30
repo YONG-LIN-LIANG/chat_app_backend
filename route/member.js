@@ -1,10 +1,11 @@
-const express = require('express')
+import express from 'express'
+import {handleAddClientMember, handleAddCsMember, handleGetResourceInfo} from '../controller/member.js'
 const router = express.Router()
-const memberController = require('../controller/member')
-
 router.route('/client/add')
-  .post(memberController.handleAddClientMember)
+  .post(handleAddClientMember)
+router.route('/cs/add')
+  .post(handleAddCsMember)
+router.route('/resource/:resource_id')
+  .get(handleGetResourceInfo)
 
-
-
-module.exports = router
+export default router
